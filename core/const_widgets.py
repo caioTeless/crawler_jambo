@@ -20,4 +20,4 @@ c_content_msg_search_browser = 'Insira algum link para iniciar a pesquisa!'
 c_content_msg_search_browser2 = 'Link inválido, insira um link válido e completo para continuar!'
 ###############
 c_title_msg_request_search = 'Erro encontrado!'
-c_content_msg_request_search = 'Erro foi detectado, tente novamente mais tarde!'
+c_content_msg_request_search = 'Internet indisponível no momento!'

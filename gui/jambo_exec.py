@@ -1,8 +1,7 @@
 import os.path
-from PySide2.QtCore import Signal, QThread, QSize, SIGNAL, QObject
-from PySide2.QtGui import QMovie
+from PySide2.QtCore import Signal, QThread, QSize, SIGNAL, QObject, Qt, QTimer, QCoreApplication
+from PySide2.QtGui import QMovie, QPixmap
 import sys
-
 from core import site_tips
 from first_window import Ui_JamboGui
 from helpers.helper_buttons import helper_clean_list_button, \
@@ -11,6 +10,10 @@ from aux_classes import internet_search
 from gui import miniBrowser
 import jambo_pdf
 from helpers.helper_message_box import *
+
+
+class Window(QWidget):
+    pass
 
 
 class Worker(QThread):
@@ -81,7 +84,10 @@ class JamboGui(QWidget, Ui_JamboGui):
             self.movie.start()
             self.thread = Worker(None, self.inputSearch.text(), self.selectTotalSites.value())
             self.thread.progress.connect(self.seed_list_widget)
-            self.thread.start()
+            try:
+                self.thread.start()
+            except:
+                QCoreApplication.quit()
 
     def seed_list_widget(self):
         self.listResult.clear()
@@ -139,5 +145,11 @@ if __name__ == "__main__":
     app = QApplication([])
     ui = JamboGui()
     ui.start_operations()
+    # pixmap = QPixmap(os.path.join(os.getcwd(), 'SplashScreen_Jambo.png'))
+    # splash = QSplashScreen()
+    # splash.setPixmap(pixmap)
+    # QTimer.singleShot(4999, splash.close)
+    # QTimer.singleShot(5000, ui.show)
+    # splash.show()
     ui.show()
     sys.exit(app.exec_())
