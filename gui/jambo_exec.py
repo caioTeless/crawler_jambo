@@ -1,4 +1,5 @@
 import os.path
+
 from PySide2.QtCore import Signal, QThread, QSize, SIGNAL, QObject, Qt, QTimer, QCoreApplication
 from PySide2.QtGui import QMovie, QPixmap
 import sys
@@ -18,6 +19,8 @@ class Window(QWidget):
 
 class Worker(QThread):
     progress = Signal(str)
+    progress_error = Signal(str)
+    has_connection = False
 
     def __init__(self, parent=None, input_query='', tot_query=0):
         super(Worker, self).__init__()
@@ -26,10 +29,11 @@ class Worker(QThread):
 
     def run(self):
         internet_test = internet_search.InternetSearch(self.input_query, self.tot_query)
+        self.has_connection = False
         if not internet_test.get_pages_wikipedia():
-            helper_request_search()
+            self.progress_error.emit(str)
         else:
-            internet_test.get_pages_wikipedia()
+            self.has_connection = True
             self.progress.emit(str)
 
 
@@ -80,14 +84,12 @@ class JamboGui(QWidget, Ui_JamboGui):
         elif len(self.inputSearch.text()) <= 1:
             helper_msg_load2()
         else:
+            self.thread = Worker(None, self.inputSearch.text(), self.selectTotalSites.value())
+            self.thread.progress_error.connect(helper_request_search)
             self.projectLoader.setMovie(self.movie)
             self.movie.start()
-            self.thread = Worker(None, self.inputSearch.text(), self.selectTotalSites.value())
             self.thread.progress.connect(self.seed_list_widget)
-            try:
-                self.thread.start()
-            except:
-                QCoreApplication.quit()
+            self.thread.start()
 
     def seed_list_widget(self):
         self.listResult.clear()
@@ -145,11 +147,10 @@ if __name__ == "__main__":
     app = QApplication([])
     ui = JamboGui()
     ui.start_operations()
-    # pixmap = QPixmap(os.path.join(os.getcwd(), 'SplashScreen_Jambo.png'))
-    # splash = QSplashScreen()
-    # splash.setPixmap(pixmap)
-    # QTimer.singleShot(4999, splash.close)
-    # QTimer.singleShot(5000, ui.show)
-    # splash.show()
-    ui.show()
+    pixmap = QPixmap(os.path.join(os.getcwd(), 'SplashScreen_Jambo.png'))
+    splash = QSplashScreen()
+    splash.setPixmap(pixmap)
+    QTimer.singleShot(4999, splash.close)
+    QTimer.singleShot(5000, ui.show)
+    splash.show()
     sys.exit(app.exec_())
