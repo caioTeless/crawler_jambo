@@ -19,8 +19,6 @@ class Window(QWidget):
 
 class Worker(QThread):
     progress = Signal(str)
-    progress_error = Signal(str)
-    has_connection = False
 
     def __init__(self, parent=None, input_query='', tot_query=0):
         super(Worker, self).__init__()
@@ -29,12 +27,8 @@ class Worker(QThread):
 
     def run(self):
         internet_test = internet_search.InternetSearch(self.input_query, self.tot_query)
-        self.has_connection = False
-        if not internet_test.get_pages_wikipedia():
-            self.progress_error.emit(str)
-        else:
-            self.has_connection = True
-            self.progress.emit(str)
+        internet_test.get_pages_wikipedia()
+        self.progress.emit(str)
 
 
 class JamboGui(QWidget, Ui_JamboGui):
@@ -84,8 +78,9 @@ class JamboGui(QWidget, Ui_JamboGui):
         elif len(self.inputSearch.text()) <= 1:
             helper_msg_load2()
         else:
+            self.internet_search.site_caught.clear()
+            self.internet_search.site_tips.clear()
             self.thread = Worker(None, self.inputSearch.text(), self.selectTotalSites.value())
-            self.thread.progress_error.connect(helper_request_search)
             self.projectLoader.setMovie(self.movie)
             self.movie.start()
             self.thread.progress.connect(self.seed_list_widget)
@@ -107,8 +102,6 @@ class JamboGui(QWidget, Ui_JamboGui):
         self.projectLoader.clear()
         self.thread.progress.disconnect()
         self.thread = None
-        self.internet_search.site_caught.clear()
-        self.internet_search.site_tips.clear()
 
     def clear_all(self):
         if self.listResult.count() > 0:
@@ -119,16 +112,13 @@ class JamboGui(QWidget, Ui_JamboGui):
             helper_clear_all_2()
 
     def save_list_widget(self):
-        if self.listResult.count() > 0:
+        if self.listResult.count() > 0 and len(self.internet_search.site_caught) > 0:
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
             file_name, _ = QFileDialog.getSaveFileName(self, 'Save File', '',
                                                        '*.pdf', options=options)
             if file_name:
                 jb = jambo_pdf.JamboPDF('data.txt', file_name)
-                jb.build_pdf()
-            else:
-                jb = jambo_pdf.JamboPDF('data.txt', file_name + '_jambo')
                 jb.build_pdf()
         else:
             helper_save_list_pdf()

@@ -3,10 +3,22 @@ import re
 import sys
 
 import requests
+from PySide2.QtCore import QThread, Signal
 from bs4 import BeautifulSoup
 from googlesearch import search
 from aux_classes import wikipedia_cll
 from helpers import crawler_header, helper_message_box
+
+
+class Worker(QThread):
+
+    progress = Signal(str)
+
+    def __init__(self, parent=None):
+        super(Worker, self).__init__()
+
+    def run(self):
+        self.progress.emit(str)
 
 
 class InternetSearch:
@@ -16,6 +28,7 @@ class InternetSearch:
     def __init__(self, query='', cont=0):
         self.query = query
         self.cont = cont
+        self.thread = Worker()
 
     def get_pages_wikipedia(self):
         sites = set()
@@ -36,9 +49,11 @@ class InternetSearch:
                         format_data = re.sub('\[(.*?)\]', '',
                                              wiki.return_content())  # remove citações no final de cada '.'
                         my_data.writelines(format_data)
+
             except Exception:
+                self.thread.progress.connect(helper_message_box.helper_request_search)
                 return False
-        return True
+            return True
 
     def read_pages(self):
         with open('data.txt', 'r', encoding='utf-8') as my_data:
